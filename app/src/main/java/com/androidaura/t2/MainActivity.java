@@ -38,64 +38,95 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<HashMap<String, String>> arraylist;
     CustomList adapter;
     ListView listview;
+   // RequestQueue requestQueue;
+    RequestQueue queue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
+      //  requestQueue = Volley.newRequestQueue(this);
         listview = (ListView) findViewById(R.id.list);
         arraylist = new ArrayList<HashMap<String, String>>();
-        adapter = new CustomList(this, arraylist);
+        adapter = new CustomList(MainActivity.this, arraylist);
         listview.setAdapter(adapter);
 
+        queue = Volley.newRequestQueue(this);
+        new Task().execute();
 
-      //  new Task().execute();
-        loadHeroList();
+
     }
 
-   // private class Task extends AsyncTask<Void, Void, Void> {
-   private void loadHeroList() {
+    private class Task extends AsyncTask<Void, Void, Void> {
 
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+
+        @SuppressLint("CommitTransaction")
+        protected Void doInBackground(Void... params) {
+
+
+
+
+
+
+                StringRequest request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
 
+
                         try {
-                          //  Log.d("vt","yes "+response);
 
-                            //getting the whole json object from the response
-                            JSONArray jj = new JSONArray(response);
+                        JSONArray jj = new JSONArray(response);
+                        for (int i = 0; i < jj.length(); i++) {
+                            JSONObject obj = jj.getJSONObject(i);
+                          //  Log.d("vt", "yes " + obj.getString("name"));
+                            HashMap<String, String> map = new HashMap<String, String>();
 
-
-                            for (int i = 0; i < jj.length(); i++) {
-                                JSONObject obj= jj.getJSONObject(i);
-                                //Log.d("vt","yes "+obj.getString("name"));
-                                HashMap<String, String> map = new HashMap<String, String>();
-
-                                map.put("name", obj.getString("name"));
-                                arraylist.add(map);
-                            }
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                            map.put("nm", obj.getString("name"));
+                         //   map.put("nm","vishal");
+                            arraylist.add(map);
                         }
+
+
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                },
-                new Response.ErrorListener() {
+
+
+
+
+                    }
+                }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        //displaying the error in toast if occurrs
-                        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.d("error",error.toString());
                     }
                 });
+                queue.add(request);
 
-        //creating a request queue
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
 
-        //adding the string request to request queue
-        requestQueue.add(stringRequest);
+
+
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+
+            adapter.notifyDataSetChanged();
+
+
+        }
+
     }
+
 }
